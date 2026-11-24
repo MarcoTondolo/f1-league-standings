@@ -57,3 +57,19 @@ def test_site_embeds_data_safely(tmp_path):
     paths = write_site(payload, tmp_path)
     assert all(p.exists() for p in paths)
     assert json.loads((tmp_path / "data" / "standings.json").read_text())["leagues"][0]["races"][0]["name"] == "Australia"
+
+
+def test_dotenv_loads_without_overriding(tmp_path, monkeypatch):
+    from f1_league.cli import load_dotenv
+
+    env = tmp_path / ".env"
+    env.write_text('# commento\nF1_FANTASY_TOKEN="abc=def"\nexport F1_USER_GUID = guid-1\nF1_ALREADY=nuovo\n', encoding="utf-8")
+    monkeypatch.delenv("F1_FANTASY_TOKEN", raising=False)
+    monkeypatch.delenv("F1_USER_GUID", raising=False)
+    monkeypatch.setenv("F1_ALREADY", "vecchio")
+    assert load_dotenv(str(env)) is True
+    import os
+    assert os.environ["F1_FANTASY_TOKEN"] == "abc=def"
+    assert os.environ["F1_USER_GUID"] == "guid-1"
+    assert os.environ["F1_ALREADY"] == "vecchio"
+    assert load_dotenv(str(tmp_path / "manca")) is False

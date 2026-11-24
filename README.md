@@ -22,16 +22,23 @@ Il cookie dura circa 5 giorni: quando scade il workflow fallisce con le istruzio
 
 ## In locale (PowerShell)
 
+Crea nella cartella del progetto un file `.env` (è già escluso da git, quindi non finisce su GitHub):
+
+```
+F1_FANTASY_TOKEN=valore_del_cookie
+F1_USER_GUID=il_tuo_guid
+```
+
+Poi:
+
 ```powershell
 pip install -e ".[dev]"
-$env:F1_FANTASY_TOKEN = 'valore_cookie'
-$env:F1_USER_GUID = 'il_tuo_guid'
 f1-league
 python -m http.server 8000 --directory docs   # poi http://localhost:8000
 pytest
 ```
 
-Le variabili vanno impostate con `$env:` nella stessa finestra in cui lanci il comando.
+Il file si legge dalla cartella da cui lanci il comando (o indicane un altro con `--env-file`). Le variabili d'ambiente già impostate hanno la precedenza sul file. Quando il cookie scade basta aggiornare il `.env`. In alternativa si possono impostare con `$env:F1_FANTASY_TOKEN = '...'` nella stessa finestra.
 
 ## Configurazione (`config.toml`)
 

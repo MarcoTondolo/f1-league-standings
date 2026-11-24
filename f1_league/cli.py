@@ -24,6 +24,27 @@ Cookie di sessione mancante o scaduto. Per aggiornarlo:
 Il cookie dura circa cinque giorni."""
 
 
+def load_dotenv(path: str = ".env") -> bool:
+    """Carica KEY=VALORE da un file .env. Le variabili gia' impostate hanno la precedenza
+    (cosi' i secret di GitHub Actions non vengono mai sovrascritti)."""
+    file = Path(path)
+    if not file.is_file():
+        return False
+    for line in file.read_text(encoding="utf-8-sig").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        if line.startswith("export "):
+            line = line[7:].lstrip()
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        if key and key not in os.environ:
+            os.environ[key] = value
+    return True
+
+
 def load_config(path: str) -> dict:
     file = Path(path)
     return tomllib.loads(file.read_text(encoding="utf-8")) if file.exists() else {}
@@ -33,11 +54,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="f1-league", description=__doc__)
     parser.add_argument("--config", default="config.toml")
     parser.add_argument("--out", default="docs", help="cartella del sito (default: docs)")
+    parser.add_argument("--env-file", default=".env", help="file con F1_FANTASY_TOKEN e F1_USER_GUID (default: .env)")
     parser.add_argument("--league", type=int, action="append", help="id lega (ripetibile)")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="%(message)s")
 
+    load_dotenv(args.env_file)
     config = load_config(args.config)
     season = int(config.get("season", 2026))
     table = [float(x) for x in config.get("f1_points", F1_POINTS)]
