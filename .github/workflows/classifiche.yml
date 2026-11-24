@@ -1,0 +1,40 @@
+name: Aggiorna classifiche
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * *"   # ogni giorno alle 06:17 UTC
+
+permissions:
+  contents: write
+
+concurrency:
+  group: classifiche
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -e .
+      - name: Genera il sito
+        env:
+          F1_FANTASY_TOKEN: ${{ secrets.F1_FANTASY_TOKEN }}
+          F1_USER_GUID: ${{ secrets.F1_USER_GUID }}
+        run: f1-league
+      - name: Pubblica le modifiche
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          if git diff --cached --quiet; then
+            echo "Nessuna modifica."
+          else
+            git commit -m "Aggiorna classifiche"
+            git push
+          fi

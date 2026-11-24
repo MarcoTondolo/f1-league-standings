@@ -1,0 +1,25 @@
+[project]
+name = "f1-league-standings"
+version = "0.1.0"
+description = "Classifiche di una lega privata F1 Fantasy: fantapunti e punti gara stile Formula 1, per weekend e totale."
+requires-python = ">=3.11"
+dependencies = ["httpx>=0.27"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+f1-league = "f1_league.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["f1_league*"]
+
+[tool.setuptools.package-data]
+f1_league = ["template.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

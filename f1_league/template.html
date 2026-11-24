@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classifica lega</title>
+<meta name="description" content="Classifiche della lega F1 Fantasy: fantapunti e punti gara stile Formula 1, per weekend e totale.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef0f3; --panel:#ffffff; --row:#f6f7f9; --line:#d9dde3;
+  --ink:#12161c; --mute:#5d6775; --accent:#12161c; --on-accent:#ffffff;
+  --gain:#0f8a5f; --loss:#c93a3a; --best:#7a35d4; --best-bg:#efe4fc;
+  --font:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --num:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c0f14; --panel:#141922; --row:#19202b; --line:#27303d;
+    --ink:#eef1f5; --mute:#8d97a6; --accent:#eef1f5; --on-accent:#0c0f14;
+    --gain:#3ddc97; --loss:#f26b6b; --best:#c79bff; --best-bg:#2a1d42;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c0f14; --panel:#141922; --row:#19202b; --line:#27303d;
+  --ink:#eef1f5; --mute:#8d97a6; --accent:#eef1f5; --on-accent:#0c0f14;
+  --gain:#3ddc97; --loss:#f26b6b; --best:#c79bff; --best-bg:#2a1d42;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 var(--font);-webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px}
+h1{margin:0;font:700 clamp(30px,6vw,44px)/1 var(--num);letter-spacing:.01em}
+.sub{margin:4px 0 0;color:var(--mute);font-size:14px}
+select{font:500 15px var(--font);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;max-width:100%}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;margin-bottom:12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+.seg button{font:600 15px var(--font);color:var(--mute);background:none;border:0;padding:9px 16px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+button:focus-visible,select:focus-visible{outline:2px solid var(--best);outline-offset:2px}
+.races{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:6px;scrollbar-width:thin}
+.races button{flex:none;font:500 14px var(--font);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+.races button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent);font-weight:600}
+.title{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:8px 2px 8px}
+.title h2{margin:0;font:600 24px/1.1 var(--num)}
+.title span{color:var(--mute);font-size:14px}
+table{width:100%;border-collapse:separate;border-spacing:0 3px;font-variant-numeric:tabular-nums}
+th{font-weight:500;font-size:13px;color:var(--mute);text-align:right;padding:2px 10px}
+th.l,td.l{text-align:left}
+td{background:var(--panel);padding:9px 10px;text-align:right;vertical-align:middle}
+td:first-child{border-radius:6px 0 0 6px}
+td:last-child{border-radius:0 6px 6px 0}
+td.pos{width:46px;text-align:center;font:700 24px/1 var(--num);background:var(--row);border-right:1px solid var(--line)}
+td.mv{width:54px;font-size:13px;font-weight:600;white-space:nowrap;text-align:left;padding-left:6px;padding-right:2px}
+.up{color:var(--gain)} .down{color:var(--loss)} .flat{color:var(--mute);font-weight:400}
+.who{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:34vw}
+.team{display:block;font-size:13px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:34vw}
+td.main{font:700 26px/1 var(--num)}
+td.sec{color:var(--mute);font:500 18px/1 var(--num);white-space:nowrap}
+tr.best td.main{color:var(--best)}
+tr.best td.main span{background:var(--best-bg);padding:3px 8px;border-radius:5px}
+.empty{padding:28px 16px;border:1px dashed var(--line);border-radius:8px;color:var(--mute);text-align:center}
+.notes{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);color:var(--mute);font-size:14px}
+.notes p{margin:0 0 8px;max-width:68ch}
+.notes details{margin-top:10px}
+.notes summary{cursor:pointer;color:var(--ink);font-weight:500}
+.notes ul{margin:8px 0 0;padding-left:18px}
+@media (max-width:560px){ .hide-s{display:none} .who,.team{max-width:42vw} td{padding:8px 7px} }
+@media (prefers-reduced-motion:no-preference){ tbody tr{transition:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="league-title">Classifica lega</h1>
+      <p class="sub" id="subtitle"></p>
+    </div>
+    <label id="league-pick" hidden><span class="sub">Lega&nbsp;</span><select id="league-select"></select></label>
+  </header>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Tipo di classifica">
+      <button type="button" data-mode="fantasy" aria-pressed="true">Fantapunti</button>
+      <button type="button" data-mode="f1" aria-pressed="false">Punti gara</button>
+    </div>
+    <div class="seg" role="group" aria-label="Periodo">
+      <button type="button" data-view="weekend" aria-pressed="true">Weekend</button>
+      <button type="button" data-view="total" aria-pressed="false">Totale</button>
+    </div>
+  </div>
+
+  <nav class="races" id="races" aria-label="Weekend"></nav>
+
+  <div class="title"><h2 id="table-title"></h2><span id="table-note"></span></div>
+  <div id="table-host"></div>
+
+  <section class="notes" id="notes"></section>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => (Math.round(n * 100) / 100).toLocaleString("it-IT", { maximumFractionDigits: 2 });
+  const signed = (n) => (n > 0 ? "+" : "") + fmt(n);
+  const state = { league: 0, race: null, mode: "fantasy", view: "weekend" };
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function readHash() {
+    const p = new URLSearchParams(location.hash.slice(1));
+    if (p.get("mode") === "f1" || p.get("mode") === "fantasy") state.mode = p.get("mode");
+    if (p.get("view") === "total" || p.get("view") === "weekend") state.view = p.get("view");
+    const li = DATA.leagues.findIndex((l) => String(l.league_id) === p.get("league"));
+    if (li >= 0) state.league = li;
+    if (p.get("race")) state.race = Number(p.get("race"));
+  }
+  function writeHash() {
+    const p = new URLSearchParams({ league: DATA.leagues[state.league].league_id, mode: state.mode, view: state.view });
+    if (state.race != null) p.set("race", state.race);
+    history.replaceState(null, "", "#" + p);
+  }
+
+  const league = () => DATA.leagues[state.league];
+
+  function currentRace() {
+    const l = league();
+    if (!l.races.length) return null;
+    return l.races.find((r) => r.id === state.race) || l.races[l.races.length - 1];
+  }
+
+  function rowsFor(race, members) {
+    const byKey = Object.fromEntries(members.map((m) => [m.key, m]));
+    const f = state.mode === "fantasy";
+    return race.rows.map((r) => {
+      const m = byKey[r.key];
+      if (state.view === "weekend") {
+        return { m, pos: r.wk_pos, main: f ? r.wk_fantasy : r.wk_f1, sec: f ? null : r.wk_fantasy, prev: null, delta: null };
+      }
+      return f
+        ? { m, pos: r.tot_fantasy_pos, main: r.tot_fantasy, sec: r.wk_fantasy, prev: r.tot_fantasy_prev, delta: r.wk_fantasy }
+        : { m, pos: r.tot_f1_pos, main: r.tot_f1, sec: r.tot_fantasy, prev: r.tot_f1_prev, delta: r.wk_f1 };
+    }).sort((a, b) => a.pos - b.pos || a.m.name.localeCompare(b.m.name, "it"));
+  }
+
+  function renderRaces() {
+    const nav = $("races");
+    nav.replaceChildren();
+    const race = currentRace();
+    for (const r of league().races) {
+      const b = el("button", "", r.name);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(race && r.id === race.id));
+      b.addEventListener("click", () => { state.race = r.id; render(); });
+      nav.appendChild(b);
+    }
+    const active = nav.querySelector('[aria-pressed="true"]');
+    if (active) active.scrollIntoView({ block: "nearest", inline: "center" });
+  }
+
+  function renderTable() {
+    const host = $("table-host");
+    host.replaceChildren();
+    const race = currentRace();
+    if (!race) {
+      $("table-title").textContent = "Nessun weekend disputato";
+      $("table-note").textContent = "";
+      host.appendChild(el("div", "empty", "Appena un weekend avrà punteggi, la classifica comparirà qui."));
+      return;
+    }
+    const f = state.mode === "fantasy", weekend = state.view === "weekend";
+    const count = league().races.indexOf(race) + 1;
+    $("table-title").textContent = weekend ? race.name : `Dopo ${race.name}`;
+    $("table-note").textContent = weekend
+      ? (f ? "Fantapunti del weekend" : "Punti gara del weekend")
+      : `${f ? "Somma fantapunti" : "Somma punti gara"} su ${count} ${count === 1 ? "weekend" : "weekend"}`;
+
+    const rows = rowsFor(race, league().members);
+    const top = rows[0].main;
+    const gap = (r) => (r.main === top ? "–" : fmt(r.main - top));
+
+    const cols = [{ label: "", cls: "pos", cell: (r) => String(r.pos), th: "pos" }];
+    if (!weekend) cols.push({ label: "", cls: "mv", move: true });
+    cols.push({ label: "Giocatore", cls: "l", who: true });
+    cols.push({ label: f ? "Fantapunti" : "Punti gara", cls: "main", cell: (r) => fmt(r.main) });
+    if (!weekend) cols.push({ label: "Weekend", cls: "sec", cell: (r) => signed(r.delta) });
+    if (f) cols.push({ label: "Dal primo", cls: "sec hide-s", cell: gap });
+    else cols.push({ label: "Fantapunti", cls: weekend ? "sec" : "sec hide-s", cell: (r) => fmt(r.sec) });
+
+    const table = el("table");
+    const headRow = el("tr");
+    for (const c of cols) {
+      const th = el("th", c.who ? "l" : (c.cls.includes("hide-s") ? "hide-s" : ""), c.label);
+      th.scope = "col";
+      headRow.appendChild(th);
+    }
+    table.appendChild(el("thead")).appendChild(headRow);
+
+    const body = el("tbody");
+    for (const r of rows) {
+      const tr = el("tr", weekend && r.pos === 1 && r.main > 0 ? "best" : "");
+      for (const c of cols) {
+        const td = el("td", c.cls);
+        if (c.who) {
+          td.appendChild(el("span", "who", r.m.name));
+          if (r.m.team) td.appendChild(el("span", "team", r.m.team));
+        } else if (c.move) {
+          if (r.prev == null) { td.classList.add("flat"); td.textContent = "–"; }
+          else if (r.prev > r.pos) { td.classList.add("up"); td.textContent = "▲ " + (r.prev - r.pos); }
+          else if (r.prev < r.pos) { td.classList.add("down"); td.textContent = "▼ " + (r.pos - r.prev); }
+          else { td.classList.add("flat"); td.textContent = "="; }
+        } else if (c.cls === "main") {
+          td.appendChild(el("span", "", c.cell(r)));
+        } else {
+          td.textContent = c.cell(r);
+        }
+        tr.appendChild(td);
+      }
+      body.appendChild(tr);
+    }
+    table.appendChild(body);
+    host.appendChild(table);
+  }
+
+  function renderNotes() {
+    const n = $("notes");
+    n.replaceChildren();
+    const table = DATA.f1_points.map(fmt).join(" · ");
+    n.appendChild(el("p", "", `Punti gara: nel weekend i primi della classifica fantasy prendono ${table}; gli altri 0. Il totale è la somma dei weekend.`));
+    n.appendChild(el("p", "", "Pari merito nel weekend: stessa posizione e stessi punti. Nel totale dei punti gara decidono prima le vittorie, poi i secondi posti e così via, infine i fantapunti."));
+    const w = league().warnings || [];
+    if (w.length) {
+      const d = el("details");
+      d.appendChild(el("summary", "", `Avvisi sui dati (${w.length})`));
+      const ul = el("ul");
+      w.forEach((x) => ul.appendChild(el("li", "", x)));
+      d.appendChild(ul);
+      n.appendChild(d);
+    }
+    const when = new Date(DATA.generated_at);
+    n.appendChild(el("p", "", "Dati aggiornati il " + when.toLocaleString("it-IT", { dateStyle: "long", timeStyle: "short" }) + "."));
+  }
+
+  function render() {
+    const l = league();
+    $("league-title").textContent = l.name;
+    $("subtitle").textContent = `Stagione ${DATA.season} · ${l.members.length} giocatori`;
+    document.title = `${l.name} · classifica ${DATA.season}`;
+    document.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === state.mode)));
+    document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === state.view)));
+    const race = currentRace();
+    state.race = race ? race.id : null;
+    renderRaces(); renderTable(); renderNotes(); writeHash();
+  }
+
+  document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => { state.mode = b.dataset.mode; render(); }));
+  document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => { state.view = b.dataset.view; render(); }));
+
+  if (!DATA || !DATA.leagues.length) {
+    $("table-host").appendChild(el("div", "empty", "Nessun dato: lancia la generazione delle classifiche."));
+    return;
+  }
+  const sel = $("league-select");
+  DATA.leagues.forEach((l, i) => sel.appendChild(Object.assign(el("option", "", l.name), { value: i })));
+  if (DATA.leagues.length > 1) $("league-pick").hidden = false;
+  sel.addEventListener("change", () => { state.league = Number(sel.value); state.race = null; render(); });
+  readHash();
+  sel.value = state.league;
+  render();
+  addEventListener("hashchange", () => { readHash(); sel.value = state.league; render(); });
+})();
+</script>
+</body>
+</html>
