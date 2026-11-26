@@ -18,3 +18,9 @@ f1_points = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
 # Chiave = id gara di F1 Fantasy.
 # [race_names]
 # 1 = "Australia"
+
+# Campionati vinti nelle stagioni passate: nome del giocatore (come appare in lega) = anni.
+# Il titolo della stagione in corso si aggiunge da solo quando il campione e' matematico.
+[titles]
+"Marco Tondolo" = [2024]
+"Gianfranco Salvemini" = [2025]

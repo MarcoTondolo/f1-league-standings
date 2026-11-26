@@ -36,6 +36,12 @@ body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 var(--fon
 header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px}
 h1{margin:0;font:700 clamp(30px,6vw,44px)/1 var(--num);letter-spacing:.01em}
 .sub{margin:4px 0 0;color:var(--mute);font-size:14px}
+#season-pick{position:relative;display:inline-block}
+#season-pick::after{content:"";position:absolute;right:.02em;top:50%;margin-top:-.08em;border:.12em solid transparent;border-top:.17em solid var(--mute);pointer-events:none}
+h1 select{font:inherit;letter-spacing:inherit;color:inherit;background:transparent;border:0;border-radius:4px;padding:0 .42em 0 0;margin:0;cursor:pointer;appearance:none;-webkit-appearance:none;max-width:none}
+h1 select:hover{color:var(--mute)}
+h1 select:focus-visible{outline:2px solid var(--best);outline-offset:3px}
+h1 option{font:500 16px var(--font);color:var(--ink);background:var(--panel)}
 select{font:500 15px var(--font);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;max-width:100%}
 .controls{display:flex;flex-wrap:wrap;gap:10px 16px;margin-bottom:12px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
@@ -95,6 +101,10 @@ dialog::backdrop{background:rgba(8,10,14,.55)}
 .pd table{margin-top:4px}
 .pd td,.pd th{padding:6px 8px}
 .pd td.l{font-weight:500}
+.titles{display:flex;align-items:center;gap:12px;margin:14px 0 0;padding:8px 12px;border:1px solid var(--gold);border-radius:8px;color:var(--gold)}
+.titles svg{flex:none;width:44px;height:44px}
+.titles b{display:block;font:700 22px/1.1 var(--num)}
+.titles span{display:block;font-size:14px}
 .tag.gold{background:transparent;border:1px solid var(--gold);color:var(--gold);margin:6px 0 0}
 .tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;font-size:12px;font-weight:600;background:var(--best-bg);color:var(--best)}
 @media (max-width:560px){
@@ -108,7 +118,7 @@ dialog::backdrop{background:rgba(8,10,14,.55)}
 <div class="wrap">
   <header>
     <div>
-      <h1 id="league-title">Classifica lega</h1>
+      <h1><span id="league-title">Classifica lega</span> <label id="season-pick" hidden><select id="season-select" aria-label="Anno"></select></label></h1>
       <p class="sub" id="subtitle"></p>
     </div>
     <label id="league-pick" hidden><span class="sub">Lega&nbsp;</span><select id="league-select"></select></label>
@@ -142,13 +152,16 @@ dialog::backdrop{background:rgba(8,10,14,.55)}
 </dialog>
 
 <script>
-const DATA = /*__DATA__*/null;
+const ALL = /*__DATA__*/null;
 
 (() => {
+  // stagione corrente + archivio, dalla piu' recente; DATA e' la stagione mostrata.
+  const SEASONS = ALL ? [ALL, ...(ALL.archive || [])].sort((a, b) => b.season - a.season) : [];
+  let DATA = SEASONS[0] || null;
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => (Math.round(n * 100) / 100).toLocaleString("it-IT", { maximumFractionDigits: 2 });
   const signed = (n) => (n > 0 ? "+" : "") + fmt(n);
-  const state = { league: 0, race: null, mode: "fantasy", view: "weekend", page: "standings", sort: "wins" };
+  const state = { season: 0, league: 0, race: null, mode: "fantasy", view: "weekend", page: "standings", sort: "wins" };
 
   function el(tag, cls, text) {
     const e = document.createElement(tag);
@@ -163,12 +176,14 @@ const DATA = /*__DATA__*/null;
     if (p.get("view") === "total" || p.get("view") === "weekend") state.view = p.get("view");
     if (p.get("page") === "stats" || p.get("page") === "standings") state.page = p.get("page");
     if (["wins", "podiums", "f1", "fantasy"].includes(p.get("sort"))) state.sort = p.get("sort");
+    const si = SEASONS.findIndex((x) => String(x.season) === p.get("season"));
+    if (si >= 0 && SEASONS[si] !== DATA) { state.season = si; DATA = SEASONS[si]; fillLeagues(); }
     const li = DATA.leagues.findIndex((l) => String(l.league_id) === p.get("league"));
     if (li >= 0) state.league = li;
     if (p.get("race")) state.race = Number(p.get("race"));
   }
   function writeHash() {
-    const p = new URLSearchParams({ league: DATA.leagues[state.league].league_id, mode: state.mode, view: state.view });
+    const p = new URLSearchParams({ season: DATA.season, league: DATA.leagues[state.league].league_id, mode: state.mode, view: state.view });
     if (state.race != null) p.set("race", state.race);
     if (state.page === "stats") { p.set("page", "stats"); p.set("sort", state.sort); }
     history.replaceState(null, "", "#" + p);
@@ -289,6 +304,32 @@ const DATA = /*__DATA__*/null;
   const raceName = (id) => { const r = league().races.find((x) => x.id === id); return r ? r.name : "Gara " + id; };
   const ordinal = (n) => n + "°";
 
+  // corona di alloro: un ramo di foglie lungo un arco, ripetuto a specchio; colore = currentColor.
+  function laurel() {
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 48 48");
+    svg.setAttribute("aria-hidden", "true");
+    const branch = document.createElementNS(NS, "g");
+    const R = 16.5, N = 10;
+    for (let i = 0; i < N; i++) {
+      const phi = 0.3 + (i / (N - 1)) * 2.3;                  // dal basso verso l'alto, apertura in cima
+      const x = 24 + R * Math.sin(phi), y = 24 + R * Math.cos(phi) - 1;
+      const leaf = document.createElementNS(NS, "ellipse");
+      leaf.setAttribute("cx", x.toFixed(2)); leaf.setAttribute("cy", y.toFixed(2));
+      leaf.setAttribute("rx", (1.6 + 0.9 * Math.sin(Math.PI * i / (N - 1))).toFixed(2));
+      leaf.setAttribute("ry", "4.2");
+      const rot = (-phi * 180 / Math.PI - 90) + 28;           // lungo la tangente, aperta verso l'esterno
+      leaf.setAttribute("transform", `rotate(${rot.toFixed(1)} ${x.toFixed(2)} ${y.toFixed(2)})`);
+      leaf.setAttribute("fill", "currentColor");
+      branch.appendChild(leaf);
+    }
+    const mirror = branch.cloneNode(true);
+    mirror.setAttribute("transform", "translate(48 0) scale(-1 1)");
+    svg.appendChild(branch); svg.appendChild(mirror);
+    return svg;
+  }
+
   function openPlayer(key) {
     const l = league();
     const m = l.members.find((x) => x.key === key);
@@ -310,6 +351,16 @@ const DATA = /*__DATA__*/null;
     close.addEventListener("click", () => $("player-dialog").close());
     head.appendChild(close);
     body.appendChild(head);
+
+    if (m.titles && m.titles.length) {
+      const t = el("div", "titles");
+      t.appendChild(laurel());
+      const txt = el("div");
+      txt.appendChild(el("b", "", m.titles.length === 1 ? "Campione" : m.titles.length + " volte campione"));
+      txt.appendChild(el("span", "", m.titles.join(" · ")));
+      t.appendChild(txt);
+      body.appendChild(t);
+    }
 
     const tiles = el("div", "tiles");
     const tile = (value, label, cls) => {
@@ -472,13 +523,32 @@ const DATA = /*__DATA__*/null;
     return;
   }
   const sel = $("league-select");
-  DATA.leagues.forEach((l, i) => sel.appendChild(Object.assign(el("option", "", l.name), { value: i })));
-  if (DATA.leagues.length > 1) $("league-pick").hidden = false;
+  const seasonSel = $("season-select");
+  function fillLeagues() {
+    sel.replaceChildren();
+    DATA.leagues.forEach((l, i) => sel.appendChild(Object.assign(el("option", "", l.name), { value: i })));
+    $("league-pick").hidden = DATA.leagues.length < 2;
+  }
+  fillLeagues();
+  SEASONS.forEach((x, i) => seasonSel.appendChild(Object.assign(el("option", "", String(x.season)), { value: i })));
+  $("season-pick").hidden = SEASONS.length < 1;
+  seasonSel.addEventListener("change", () => {
+    const previous = league().name;
+    state.season = Number(seasonSel.value);
+    DATA = SEASONS[state.season];
+    fillLeagues();
+    const same = DATA.leagues.findIndex((l) => l.name === previous);   // stessa lega se esiste anche quell'anno
+    state.league = same >= 0 ? same : 0;
+    state.race = null;
+    sel.value = state.league;
+    render();
+  });
   sel.addEventListener("change", () => { state.league = Number(sel.value); state.race = null; render(); });
+  const syncPickers = () => { seasonSel.value = state.season; sel.value = state.league; };
   readHash();
-  sel.value = state.league;
+  syncPickers();
   render();
-  addEventListener("hashchange", () => { readHash(); sel.value = state.league; render(); });
+  addEventListener("hashchange", () => { readHash(); syncPickers(); render(); });
 })();
 </script>
 </body>

@@ -124,8 +124,10 @@ def build_payload(
     race_names: Mapping[int, str],
     table: Sequence[float],
     total_races: int | None = None,
+    titles: Mapping[str, Sequence[int]] | None = None,
 ) -> dict[str, Any]:
     total = total_races or max(race_names, default=0)
+    wanted = {str(name).strip().casefold(): [int(y) for y in years] for name, years in (titles or {}).items()}
     for league in leagues:
         for race in league["races"]:
             race["name"] = race_names.get(race["id"], f"Gara {race['id']}")
@@ -135,6 +137,18 @@ def build_payload(
         if total and races:
             champion = mathematical_champion(races[-1]["rows"], total - len(races), table)
         league["champion"] = champion
+        # titoli vinti: quelli indicati in config (per nome) + la stagione in corso se il campione e' matematico.
+        matched: set[str] = set()
+        for member in league["members"]:
+            name = str(member["name"]).strip().casefold()
+            years = set(wanted.get(name, ()))
+            if name in wanted:
+                matched.add(name)
+            if champion == member["key"]:
+                years.add(season)
+            member["titles"] = sorted(years)
+        for name in wanted.keys() - matched:
+            log.warning("titoli: nessun giocatore chiamato '%s' nella lega '%s'", name, league["name"])
     return {
         "season": season,
         "total_races": total,
@@ -144,10 +158,27 @@ def build_payload(
     }
 
 
-def render_html(payload: Mapping[str, Any]) -> str:
+def render_html(payload: Mapping[str, Any], archive: Sequence[Mapping[str, Any]] | None = None) -> str:
+    """Pagina con la stagione corrente piu' le stagioni archiviate (selezionabili dal menu Anno)."""
+    full = {**payload, "archive": list(archive or [])}
     # "</" dentro <script> chiuderebbe il tag: lo si evita nel JSON incorporato.
-    data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    data = json.dumps(full, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     return TEMPLATE.read_text(encoding="utf-8").replace("/*__DATA__*/null", data)
+
+
+def load_archive(out_dir: Path, current_season: int) -> list[dict[str, Any]]:
+    """Stagioni salvate in <out>/data/seasons/<anno>.json, escluse quella corrente, dalla piu' recente."""
+    found: list[dict[str, Any]] = []
+    for file in sorted((out_dir / "data" / "seasons").glob("*.json")):
+        try:
+            snap = json.loads(file.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            log.warning("archivio illeggibile, ignorato: %s", file)
+            continue
+        if isinstance(snap, dict) and snap.get("leagues") and int(snap.get("season", 0)) != current_season:
+            snap.pop("archive", None)
+            found.append(snap)
+    return sorted(found, key=lambda x: int(x["season"]), reverse=True)
 
 
 def write_site(payload: Mapping[str, Any], out_dir: Path) -> list[Path]:
@@ -155,7 +186,14 @@ def write_site(payload: Mapping[str, Any], out_dir: Path) -> list[Path]:
     (out_dir / "data").mkdir(exist_ok=True)
     html_path = out_dir / "index.html"
     json_path = out_dir / "data" / "standings.json"
-    html_path.write_text(render_html(payload), encoding="utf-8")
+    paths = [html_path, json_path]
+    # Istantanea della stagione: l'anno dopo l'API mostrera' solo la nuova stagione, questa resta.
+    if payload.get("leagues"):
+        season_path = out_dir / "data" / "seasons" / f"{int(payload['season'])}.json"
+        season_path.parent.mkdir(parents=True, exist_ok=True)
+        season_path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        paths.append(season_path)
+    html_path.write_text(render_html(payload, load_archive(out_dir, int(payload["season"]))), encoding="utf-8")
     json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
     (out_dir / ".nojekyll").write_text("", encoding="utf-8")
-    return [html_path, json_path]
+    return paths

@@ -89,3 +89,33 @@ def test_payload_marks_champion_only_when_certain():
     assert payload(None)["champion"] is None   # calendario sconosciuto
     assert payload(10)["champion"] is None     # 7 weekend ancora da correre
     assert payload(3)["champion"] is not None  # stagione finita: vince il primo
+
+
+def test_titles_from_config_and_current_season(caplog):
+    data = collect_league(make_api(), 7, spacing=0)
+    luca = next(m["key"] for m in data["members"] if m["name"] == "Luca")
+    table = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+    out = build_payload([data], 2026, {}, table, 3, {"luca": [2024], "Sconosciuto": [2025]})
+    members = {m["name"]: m for m in out["leagues"][0]["members"]}
+    assert members["Luca"]["titles"] == [2024, 2026]   # config + stagione in corso (campione certo)
+    assert members["Giulia"]["titles"] == []
+    assert any("Sconosciuto".casefold() in r.message for r in caplog.records)
+    assert out["leagues"][0]["champion"] == luca
+
+
+def test_season_snapshot_and_archive(tmp_path):
+    from f1_league.build import load_archive
+
+    table = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+    data = collect_league(make_api(), 7, spacing=0)
+    write_site(build_payload([data], 2025, {}, table), tmp_path)
+    assert (tmp_path / "data" / "seasons" / "2025.json").is_file()
+    # l'anno dopo: nuova stagione, quella vecchia resta e finisce nella pagina
+    paths = write_site(build_payload([data], 2026, {}, table), tmp_path)
+    assert (tmp_path / "data" / "seasons" / "2026.json") in paths
+    assert [x["season"] for x in load_archive(tmp_path, 2026)] == [2025]
+    html = (tmp_path / "index.html").read_text(encoding="utf-8")
+    assert '"archive":[{"season":2025' in html
+    # stagione senza leghe (inizio anno): nessuna istantanea vuota che sovrascriva
+    write_site(build_payload([], 2026, {}, table), tmp_path)
+    assert json.loads((tmp_path / "data" / "seasons" / "2026.json").read_text(encoding="utf-8"))["leagues"]

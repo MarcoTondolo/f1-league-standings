@@ -1,6 +1,7 @@
 {
  "season": 2026,
- "generated_at": "2026-11-26T14:42:08+00:00",
+ "total_races": 23,
+ "generated_at": "2026-11-26T15:29:43+00:00",
  "f1_points": [
   25.0,
   18.0,
@@ -22,73 +23,89 @@
      "key": "4a80de80-11a4-11f1-bd50-f12b35c615d5-0-231782919:1",
      "name": "Miriana Tota",
      "team": "Must be theeee...water",
-     "official": 4872.0
+     "official": 4872.0,
+     "titles": []
     },
     {
      "key": "38073a84-1176-11f1-ab76-5d5c886f6f39-0-136797047:1",
      "name": "Francesco Novia",
      "team": "Problemi problemii",
-     "official": 4781.0
+     "official": 4781.0,
+     "titles": []
     },
     {
      "key": "56a7c1ea-1174-11f1-82b5-b37f1d54e5d0-0-203609872:1",
      "name": "Marco Tondolo",
      "team": "Scuseria Ferracci",
-     "official": 4729.0
+     "official": 4729.0,
+     "titles": [
+      2024
+     ]
     },
     {
      "key": "6643c4a4-117f-11f1-be13-5557416cc632-0-211786406:1",
      "name": "Anita Bruschi",
      "team": "Stardust Crusaders",
-     "official": 4617.0
+     "official": 4617.0,
+     "titles": []
     },
     {
      "key": "61340bae-117a-11f1-813b-35115d49f57d-0-156161074:1",
      "name": "Gianfranco Salvemini",
      "team": "Piloti Parastatali",
-     "official": 4428.0
+     "official": 4428.0,
+     "titles": [
+      2025
+     ]
     },
     {
      "key": "fb8b0a90-1175-11f1-a3fa-87fe5ee26551-0-178269622:1",
      "name": "Francesco De Lucia",
      "team": "Pagurini di CiccioDeLucia",
-     "official": 4405.0
+     "official": 4405.0,
+     "titles": []
     },
     {
      "key": "3fecba9c-1178-11f1-bec4-d5465edddecf-0-34910116:3",
      "name": "Giuseppe Campana",
      "team": "Ales(mo)!",
-     "official": 4385.0
+     "official": 4385.0,
+     "titles": []
     },
     {
      "key": "77c68d94-1583-11f1-af1a-8b3951234cf3-0-169376748:1",
      "name": "Pasquale Miani",
      "team": "Checcoglione Racing",
-     "official": 4369.0
+     "official": 4369.0,
+     "titles": []
     },
     {
      "key": "a5f1a9b4-1935-11f1-8584-91067885f997-0-232492641:1",
      "name": "Elisa Lops",
      "team": "Eliii ;)",
-     "official": 4214.0
+     "official": 4214.0,
+     "titles": []
     },
     {
      "key": "94862ad6-199b-11f1-a02c-19558e7ce9a4-0-232604136:1",
      "name": "Davide Tota",
      "team": "FantaPrimo",
-     "official": 3927.0
+     "official": 3927.0,
+     "titles": []
     },
     {
      "key": "b956b656-1175-11f1-a35e-39ea15b0f4ef-0-156161037:1",
      "name": "Phaelo Bean",
      "team": "Crêpe colLotus",
-     "official": 3298.0
+     "official": 3298.0,
+     "titles": []
     },
     {
      "key": "7a3dba86-1176-11f1-bfd8-89ad6103548b-0-156160983:1",
      "name": "Alfonso U criminoil",
      "team": "L scuppioit",
-     "official": 2951.0
+     "official": 2951.0,
+     "titles": []
     }
    ],
    "races": [
@@ -3401,7 +3418,8 @@
      "avg_fantasy": 140.52
     }
    },
-   "warnings": []
+   "warnings": [],
+   "champion": null
   }
  ]
 }

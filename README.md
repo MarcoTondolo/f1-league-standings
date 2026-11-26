@@ -58,6 +58,17 @@ Cliccando il nome di un giocatore (anche nella classifica) si apre la scheda con
 fantapunti e punti gara attuali con la posizione, il miglior weekend e il dettaglio weekend per weekend.
 Vittoria = primo posto nel weekend, podio = primi tre; in caso di pari merito la posizione e' condivisa.
 
+## Titoli e stagioni passate
+
+- **Titoli.** I campionati vinti negli anni scorsi stanno in `config.toml`, tabella `[titles]` (`"Nome Cognome" = [2024]`).
+  Nella scheda del giocatore compare la corona d'alloro dorata con gli anni.
+- **Registrare il titolo in automatico.** Quando il campione dei punti gara e' matematico, `f1-league --record-titles`
+  (o `py -m f1_league.titles` dopo una build) aggiunge nome e anno a `[titles]`. Il workflow lo fa da solo e fa commit di `config.toml`.
+- **Archivio.** Ogni build salva l'istantanea della stagione in `docs/data/seasons/<anno>.json`. L'anno dopo la nuova stagione
+  parte da zero ma quelle vecchie restano: il menu **Anno** in alto a destra (compare con almeno due stagioni) le mostra.
+  Per archiviare una stagione gia' finita basta una build con `season = <anno>` in `config.toml`, sempre che F1 Fantasy
+  ne esponga ancora i dati.
+
 ## Configurazione (`config.toml`)
 
 - `leagues`: id delle leghe; vuoto = tutte le tue leghe private fino a `max_members` iscritti.
