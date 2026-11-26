@@ -12,6 +12,7 @@ from typing import Any, Mapping, Sequence
 
 from f1_league.api import FantasyApi, is_own_account
 from f1_league.client import AuthExpired, FantasyError, NotShared
+from f1_league.analysis import analyze_league
 from f1_league.scoring import F1_POINTS, build_season, fantasy_champion, mathematical_champion, season_stats
 
 log = logging.getLogger(__name__)
@@ -161,6 +162,7 @@ def build_payload(
             remaining = total - len(races)
             champions["f1"] = mathematical_champion(races[-1]["rows"], remaining, table)
             champions["fantasy"] = fantasy_champion(races[-1]["rows"], remaining)
+        analyze_league(league)
         league["champion"] = champions["f1"]               # campione matematico dei punti gara (nome in oro)
         league["champion_fantasy"] = champions["fantasy"]  # campione fantapunti, a stagione finita
         # titoli vinti: quelli in config (per nome) + la stagione in corso se il campione e' certo.

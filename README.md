@@ -57,6 +57,13 @@ Nella pagina c'e' il pulsante **Statistiche**: tabella ordinabile (vittorie, pod
 Cliccando il nome di un giocatore (anche nella classifica) si apre la scheda con vittorie, podi,
 fantapunti e punti gara attuali con la posizione, il miglior weekend e il dettaglio weekend per weekend.
 Vittoria = primo posto nel weekend, podio = primi tre; in caso di pari merito la posizione e' condivisa.
+Sotto i numeri c'e' un'**analisi della stagione** scritta in automatico (posizione, vittorie e podi, andamento tra prima e seconda meta', regolarita', percorso in classifica, miglior e peggior weekend), generata da `f1_league/analysis.py` solo dai dati.
+
+## Altre pagine
+
+- **Grafico:** posizione di ogni giocatore weekend per weekend (fantapunti o punti gara). Clicca una linea o un nome per evidenziare fino a 3 giocatori; passando il mouse su un weekend compare il dettaglio. Sotto, la stessa cosa in tabella.
+- **Testa a testa:** scegli due giocatori: weekend vinti da ciascuno, pareggi, barre della differenza per weekend e numeri a confronto.
+- **Albo d'oro:** i campioni di ogni anno (fantapunti e punti gara) e i titoli per giocatore, ricavati da `[titles.*]` di `config.toml` e dall'archivio delle stagioni.
 
 ## Titoli e stagioni passate
 

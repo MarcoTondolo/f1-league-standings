@@ -128,3 +128,20 @@ def test_season_snapshot_and_archive(tmp_path):
     # stagione senza leghe (inizio anno): nessuna istantanea vuota che sovrascriva
     write_site(build_payload([], 2026, {}, table), tmp_path)
     assert json.loads((tmp_path / "data" / "seasons" / "2026.json").read_text(encoding="utf-8"))["leagues"]
+
+
+def test_analysis_sentences_are_generated_for_every_member():
+    data = collect_league(make_api(), 7, spacing=0)
+    out = build_payload([data], 2026, {1: "GP A", 2: "GP B", 3: "GP C"}, [25, 18, 15, 12, 10, 8, 6, 4, 2, 1], 10)
+    stats = out["leagues"][0]["stats"]
+    assert all(s["analysis"] for s in stats.values())
+    leader = next(s for s in stats.values() if s["f1_pos"] == 1)
+    assert leader["analysis"][0].startswith("1° in entrambe le classifiche")
+    assert any("Miglior weekend: GP" in line for line in leader["analysis"])
+    assert all("None" not in line for s in stats.values() for line in s["analysis"])
+
+
+def test_analysis_prepositions():
+    from f1_league.analysis import _prep
+
+    assert [_prep("da", 2), _prep("da", 8), _prep("a", 6), _prep("a", 11)] == ["dal 2°", "dall'8°", "al 6°", "all'11°"]
