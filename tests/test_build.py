@@ -91,16 +91,25 @@ def test_payload_marks_champion_only_when_certain():
     assert payload(3)["champion"] is not None  # stagione finita: vince il primo
 
 
-def test_titles_from_config_and_current_season(caplog):
+def test_titles_by_kind_from_config_and_current_season(caplog):
     data = collect_league(make_api(), 7, spacing=0)
     luca = next(m["key"] for m in data["members"] if m["name"] == "Luca")
     table = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
-    out = build_payload([data], 2026, {}, table, 3, {"luca": [2024], "Sconosciuto": [2025]})
+    config = {"fantasy": {"luca": [2024]}, "f1": {"Giulia": [2025]}, "Sconosciuto": [2023]}   # ultima voce: formato vecchio
+    out = build_payload([data], 2026, {}, table, 3, config)
     members = {m["name"]: m for m in out["leagues"][0]["members"]}
-    assert members["Luca"]["titles"] == [2024, 2026]   # config + stagione in corso (campione certo)
-    assert members["Giulia"]["titles"] == []
-    assert any("Sconosciuto".casefold() in r.message for r in caplog.records)
-    assert out["leagues"][0]["champion"] == luca
+    # stagione finita (3 weekend su 3): Luca e' campione sia nei punti gara sia nei fantapunti
+    assert members["Luca"]["titles"] == {"fantasy": [2024, 2026], "f1": [2026]}
+    assert members["Giulia"]["titles"] == {"fantasy": [], "f1": [2025]}
+    assert any("sconosciuto" in r.message for r in caplog.records)
+    assert out["leagues"][0]["champion"] == luca == out["leagues"][0]["champion_fantasy"]
+
+
+def test_fantasy_title_only_when_season_is_over():
+    data = collect_league(make_api(), 7, spacing=0)
+    out = build_payload([data], 2026, {}, [25, 18, 15], 10)["leagues"][0]
+    assert out["champion_fantasy"] is None
+    assert all(m["titles"] == {"fantasy": [], "f1": []} for m in out["members"])
 
 
 def test_season_snapshot_and_archive(tmp_path):

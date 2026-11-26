@@ -12,7 +12,7 @@ from typing import Any, Mapping, Sequence
 
 from f1_league.api import FantasyApi, is_own_account
 from f1_league.client import AuthExpired, FantasyError, NotShared
-from f1_league.scoring import F1_POINTS, build_season, mathematical_champion, season_stats
+from f1_league.scoring import F1_POINTS, build_season, fantasy_champion, mathematical_champion, season_stats
 
 log = logging.getLogger(__name__)
 
@@ -118,37 +118,66 @@ def fetch_race_names(season: int, *, attempts: int = 3, sleep=time.sleep) -> dic
     return {}
 
 
+TITLE_KINDS = ("fantasy", "f1")   # fantapunti, punti gara
+
+
+def normalize_titles(raw: Mapping[str, Any] | None) -> dict[str, dict[str, list[int]]]:
+    """Titoli da config -> {"fantasy": {nome: [anni]}, "f1": {nome: [anni]}} (nomi in minuscolo).
+
+    Formato nuovo: tabelle [titles.fantasy] e [titles.f1]. Formato vecchio: [titles] con
+    "Nome" = [anni], letto come titoli fantapunti.
+    """
+    out: dict[str, dict[str, list[int]]] = {kind: {} for kind in TITLE_KINDS}
+    for key, value in (raw or {}).items():
+        if isinstance(value, Mapping):
+            kind = str(key).strip().casefold()
+            if kind not in out:
+                log.warning("titoli: tabella sconosciuta [titles.%s] (usa fantasy o f1)", key)
+                continue
+            for name, years in value.items():
+                out[kind].setdefault(str(name).strip().casefold(), []).extend(int(y) for y in years)
+        else:
+            out["fantasy"].setdefault(str(key).strip().casefold(), []).extend(int(y) for y in value)
+    return out
+
+
 def build_payload(
     leagues: Sequence[dict],
     season: int,
     race_names: Mapping[int, str],
     table: Sequence[float],
     total_races: int | None = None,
-    titles: Mapping[str, Sequence[int]] | None = None,
+    titles: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     total = total_races or max(race_names, default=0)
-    wanted = {str(name).strip().casefold(): [int(y) for y in years] for name, years in (titles or {}).items()}
+    wanted = normalize_titles(titles)
     for league in leagues:
         for race in league["races"]:
             race["name"] = race_names.get(race["id"], f"Gara {race['id']}")
         races = league["races"]
         # senza calendario noto non si puo' dire quanti weekend mancano: nessun campione.
-        champion = None
+        champions: dict[str, str | None] = {"fantasy": None, "f1": None}
         if total and races:
-            champion = mathematical_champion(races[-1]["rows"], total - len(races), table)
-        league["champion"] = champion
-        # titoli vinti: quelli indicati in config (per nome) + la stagione in corso se il campione e' matematico.
-        matched: set[str] = set()
+            remaining = total - len(races)
+            champions["f1"] = mathematical_champion(races[-1]["rows"], remaining, table)
+            champions["fantasy"] = fantasy_champion(races[-1]["rows"], remaining)
+        league["champion"] = champions["f1"]               # campione matematico dei punti gara (nome in oro)
+        league["champion_fantasy"] = champions["fantasy"]  # campione fantapunti, a stagione finita
+        # titoli vinti: quelli in config (per nome) + la stagione in corso se il campione e' certo.
+        matched: dict[str, set[str]] = {kind: set() for kind in TITLE_KINDS}
         for member in league["members"]:
             name = str(member["name"]).strip().casefold()
-            years = set(wanted.get(name, ()))
-            if name in wanted:
-                matched.add(name)
-            if champion == member["key"]:
-                years.add(season)
-            member["titles"] = sorted(years)
-        for name in wanted.keys() - matched:
-            log.warning("titoli: nessun giocatore chiamato '%s' nella lega '%s'", name, league["name"])
+            member["titles"] = {}
+            for kind in TITLE_KINDS:
+                years = set(wanted[kind].get(name, ()))
+                if name in wanted[kind]:
+                    matched[kind].add(name)
+                if champions[kind] == member["key"]:
+                    years.add(season)
+                member["titles"][kind] = sorted(years)
+        for kind in TITLE_KINDS:
+            for name in wanted[kind].keys() - matched[kind]:
+                log.warning("titoli %s: nessun giocatore chiamato '%s' nella lega '%s'", kind, name, league["name"])
     return {
         "season": season,
         "total_races": total,

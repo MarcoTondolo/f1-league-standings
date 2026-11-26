@@ -56,7 +56,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", default="docs", help="cartella del sito (default: docs)")
     parser.add_argument("--env-file", default=".env", help="file con F1_FANTASY_TOKEN e F1_USER_GUID (default: .env)")
     parser.add_argument("--login", action="store_true", help="apre Chrome, tu accedi, e token/GUID vengono salvati in .env")
-    parser.add_argument("--record-titles", action="store_true", help="se c'e' un campione matematico, scrive nome e anno in [titles] di config.toml")
+    parser.add_argument("--record-titles", action=argparse.BooleanOptionalAction, default=True, help="scrive in [titles] di config.toml i campioni certi (default: si'; --no-record-titles per disattivare)")
     parser.add_argument("--league", type=int, action="append", help="id lega (ripetibile)")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
@@ -111,8 +111,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.record_titles:
         from f1_league.titles import champions_from_payload, record_titles
 
-        for name, year in record_titles(args.config, champions_from_payload(payload)):
-            logging.info("titolo %d registrato in %s per %s", year, args.config, name)
+        for name, year, kind in record_titles(args.config, champions_from_payload(payload)):
+            logging.info("titolo %d (%s) registrato in %s per %s", year, kind, args.config, name)
     return 0
 
 

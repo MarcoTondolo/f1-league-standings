@@ -60,10 +60,10 @@ Vittoria = primo posto nel weekend, podio = primi tre; in caso di pari merito la
 
 ## Titoli e stagioni passate
 
-- **Titoli.** I campionati vinti negli anni scorsi stanno in `config.toml`, tabella `[titles]` (`"Nome Cognome" = [2024]`).
-  Nella scheda del giocatore compare la corona d'alloro dorata con gli anni.
-- **Registrare il titolo in automatico.** Quando il campione dei punti gara e' matematico, `f1-league --record-titles`
-  (o `py -m f1_league.titles` dopo una build) aggiunge nome e anno a `[titles]`. Il workflow lo fa da solo e fa commit di `config.toml`.
+- **Titoli.** I campionati vinti negli anni scorsi stanno in `config.toml`: `[titles.fantasy]` per il campione
+  fantapunti e `[titles.f1]` per il campione punti gara (`"Nome Cognome" = [2024]`). Nella scheda del giocatore compare
+  una corona d'alloro dorata per ogni tipo di titolo, con gli anni. (Il vecchio formato `[titles]` e' letto come fantapunti.)
+- **Registrare il titolo in automatico.** Ogni build (`py -m f1_league`, e quindi anche il workflow) aggiunge a `config.toml` nome e anno dei campioni certi: in `[titles.f1]` quando il campione dei punti gara e' matematico, in `[titles.fantasy]` a stagione finita (tutti i weekend giocati, primo da solo). Si puo' disattivare con `--no-record-titles`; da solo: `py -m f1_league.titles`. Questo e' cio' che fa comparire il titolo anche negli anni successivi.
 - **Archivio.** Ogni build salva l'istantanea della stagione in `docs/data/seasons/<anno>.json`. L'anno dopo la nuova stagione
   parte da zero ma quelle vecchie restano: il menu **Anno** in alto a destra (compare con almeno due stagioni) le mostra.
   Per archiviare una stagione gia' finita basta una build con `season = <anno>` in `config.toml`, sempre che F1 Fantasy

@@ -101,7 +101,7 @@ dialog::backdrop{background:rgba(8,10,14,.55)}
 .pd table{margin-top:4px}
 .pd td,.pd th{padding:6px 8px}
 .pd td.l{font-weight:500}
-.titles{display:flex;align-items:center;gap:12px;margin:14px 0 0;padding:8px 12px;border:1px solid var(--gold);border-radius:8px;color:var(--gold)}
+.titles{display:flex;align-items:center;gap:12px;margin:10px 0 0;padding:8px 12px;border:1px solid var(--gold);border-radius:8px;color:var(--gold)}
 .titles svg{flex:none;width:44px;height:44px}
 .titles b{display:block;font:700 22px/1.1 var(--num)}
 .titles span{display:block;font-size:14px}
@@ -352,12 +352,15 @@ const ALL = /*__DATA__*/null;
     head.appendChild(close);
     body.appendChild(head);
 
-    if (m.titles && m.titles.length) {
+    const KINDS = [["fantasy", "fantapunti"], ["f1", "punti gara"]];
+    for (const [kind, label] of KINDS) {
+      const years = (m.titles && m.titles[kind]) || [];
+      if (!years.length) continue;
       const t = el("div", "titles");
       t.appendChild(laurel());
       const txt = el("div");
-      txt.appendChild(el("b", "", m.titles.length === 1 ? "Campione" : m.titles.length + " volte campione"));
-      txt.appendChild(el("span", "", m.titles.join(" · ")));
+      txt.appendChild(el("b", "", (years.length === 1 ? "Campione " : years.length + " volte campione ") + label));
+      txt.appendChild(el("span", "", years.join(" · ")));
       t.appendChild(txt);
       body.appendChild(t);
     }

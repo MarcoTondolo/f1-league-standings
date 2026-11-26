@@ -20,7 +20,11 @@ f1_points = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
 # 1 = "Australia"
 
 # Campionati vinti nelle stagioni passate: nome del giocatore (come appare in lega) = anni.
-# Il titolo della stagione in corso si aggiunge da solo quando il campione e' matematico.
-[titles]
+# [titles.fantasy] = campione fantapunti, [titles.f1] = campione punti gara.
+# Il titolo della stagione in corso si aggiunge da solo: punti gara quando e' matematico,
+# fantapunti a stagione finita (con --record-titles viene scritto anche qui).
+[titles.fantasy]
 "Marco Tondolo" = [2024]
 "Gianfranco Salvemini" = [2025]
+
+[titles.f1]

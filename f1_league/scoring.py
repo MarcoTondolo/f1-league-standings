@@ -170,3 +170,13 @@ def mathematical_champion(rows, remaining, table):
         return best["key"] if remaining == 0 else None
     top = max(table) if table else 0
     return best["key"] if best["tot_f1"] > ranked[1]["tot_f1"] + remaining * top else None
+
+
+def fantasy_champion(rows, remaining):
+    """Chiave del campione fantapunti: solo a stagione finita (nessun weekend rimasto), se il primo e' solo."""
+    if remaining != 0 or not rows:
+        return None
+    ranked = sorted(rows, key=lambda r: r["tot_fantasy"], reverse=True)
+    if len(ranked) > 1 and ranked[0]["tot_fantasy"] == ranked[1]["tot_fantasy"]:
+        return None
+    return ranked[0]["key"]

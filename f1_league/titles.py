@@ -1,7 +1,8 @@
 """Registra nel config.toml i campionati vinti.
 
-Quando un campione e' matematico (campo ``champion`` della lega) il suo nome viene aggiunto,
-con l'anno della stagione, alla tabella ``[titles]`` di config.toml. Cosi' il titolo resta
+Quando un campione e' certo il suo nome viene aggiunto, con l'anno della stagione, a config.toml:
+tabella ``[titles.f1]`` per i punti gara (campione matematico) e ``[titles.fantasy]`` per i fantapunti
+(a stagione finita). Cosi' il titolo resta
 anche l'anno dopo, quando la nuova stagione non ha ancora un campione.
 
 Uso da solo:   py -m f1_league.titles                (legge docs/data/standings.json)
@@ -31,41 +32,48 @@ def _unquote(key: str) -> str:
     return json.loads(key) if key.startswith('"') else key
 
 
-def champions_from_payload(payload: Mapping[str, Any]) -> list[tuple[str, int]]:
-    """(nome, anno) dei campioni matematici presenti nel payload."""
+FIELDS = {"f1": "champion", "fantasy": "champion_fantasy"}
+
+
+def champions_from_payload(payload: Mapping[str, Any]) -> list[tuple[str, int, str]]:
+    """(nome, anno, tipo) dei campioni certi presenti nel payload; tipo = "f1" o "fantasy"."""
     season = int(payload["season"])
-    found: list[tuple[str, int]] = []
+    found: list[tuple[str, int, str]] = []
     for league in payload.get("leagues", []):
-        key = league.get("champion")
-        for member in league.get("members", []):
-            if key and member.get("key") == key and member.get("name") not in (None, "", "?"):
-                found.append((str(member["name"]), season))
+        for kind, field in FIELDS.items():
+            key = league.get(field)
+            for member in league.get("members", []):
+                if key and member.get("key") == key and member.get("name") not in (None, "", "?"):
+                    found.append((str(member["name"]), season, kind))
     return found
 
 
-def add_titles(text: str, entries: Iterable[tuple[str, int]]) -> tuple[str, list[tuple[str, int]]]:
-    """Aggiunge (nome, anno) alla tabella [titles] del testo TOML, senza toccare il resto.
+def add_titles(
+    text: str, entries: Iterable[tuple[str, int, str]]
+) -> tuple[str, list[tuple[str, int, str]]]:
+    """Aggiunge (nome, anno, tipo) alla tabella [titles.<tipo>] del testo TOML, senza toccare il resto.
 
     Restituisce il nuovo testo e le coppie davvero aggiunte (quelle gia' presenti sono ignorate).
     """
     newline = "\r\n" if "\r\n" in text else "\n"
     lines = text.splitlines()
-    added: list[tuple[str, int]] = []
+    added: list[tuple[str, int, str]] = []
 
-    def table_bounds() -> tuple[int, int] | None:
-        start = next((i for i, l in enumerate(lines) if re.match(r"^\s*\[titles\]\s*(#.*)?$", l)), None)
+    def table_bounds(kind: str) -> tuple[int, int] | None:
+        header = re.compile(rf"^\s*\[titles\.{re.escape(kind)}\]\s*(#.*)?$")
+        start = next((i for i, l in enumerate(lines) if header.match(l)), None)
         if start is None:
             return None
         end = next((i for i in range(start + 1, len(lines)) if _TABLE.match(lines[i])), len(lines))
         return start, end
 
-    for name, year in entries:
-        bounds = table_bounds()
+    for name, year, kind in entries:
+        bounds = table_bounds(kind)
         if bounds is None:
             if lines and lines[-1].strip():
                 lines.append("")
-            lines += ["[titles]"]
-            bounds = table_bounds()
+            lines += [f"[titles.{kind}]"]
+            bounds = table_bounds(kind)
         start, end = bounds  # type: ignore[misc]
         for i in range(start + 1, end):
             m = _LINE.match(lines[i])
@@ -75,18 +83,18 @@ def add_titles(text: str, entries: Iterable[tuple[str, int]]) -> tuple[str, list
                     break
                 years.add(year)
                 lines[i] = f'{m["lead"]}{m["key"]}{m["eq"]}[{", ".join(map(str, sorted(years)))}]{m["tail"]}'
-                added.append((name, year))
+                added.append((name, year, kind))
                 break
         else:
             last = end
             while last > start + 1 and not lines[last - 1].strip():
                 last -= 1
             lines.insert(last, f"{_quote(name)} = [{year}]")
-            added.append((name, year))
+            added.append((name, year, kind))
     return newline.join(lines) + newline, added
 
 
-def record_titles(config_path: str | Path, entries: Iterable[tuple[str, int]]) -> list[tuple[str, int]]:
+def record_titles(config_path: str | Path, entries: Iterable[tuple[str, int, str]]) -> list[tuple[str, int, str]]:
     """Scrive i titoli nel file TOML. Se il risultato non fosse un TOML valido non scrive nulla."""
     path = Path(config_path)
     entries = list(entries)
@@ -116,8 +124,8 @@ def main(argv: list[str] | None = None) -> int:
         print("Nessun campione matematico per ora.")
         return 0
     added = record_titles(args.config, champions)
-    for name, year in added:
-        print(f"Titolo {year} registrato per {name}")
+    for name, year, kind in added:
+        print(f"Titolo {year} ({'fantapunti' if kind == 'fantasy' else 'punti gara'}) registrato per {name}")
     if not added:
         print("Titoli gia' registrati.")
     return 0
