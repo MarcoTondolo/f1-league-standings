@@ -12,7 +12,7 @@ from typing import Any, Mapping, Sequence
 
 from f1_league.api import FantasyApi, is_own_account
 from f1_league.client import AuthExpired, FantasyError, NotShared
-from f1_league.scoring import F1_POINTS, build_season
+from f1_league.scoring import F1_POINTS, build_season, season_stats
 
 log = logging.getLogger(__name__)
 
@@ -97,6 +97,7 @@ def collect_league(
             for m in shown
         ],
         "races": [{"id": r["race_id"], "rows": r["rows"]} for r in races],
+        "stats": season_stats(races, keys),
         "warnings": warnings,
     }
 

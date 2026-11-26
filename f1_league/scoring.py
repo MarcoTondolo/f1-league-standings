@@ -114,3 +114,42 @@ def build_season(
         previous_pos = {"fantasy": fantasy_ranks, "f1": f1_ranks}
 
     return races
+
+
+def season_stats(races: Sequence[Mapping], members: Sequence[str]) -> dict[str, dict]:
+    """Statistiche di stagione per membro, dai risultati di ``build_season``.
+
+    * ``wins``: weekend chiusi al 1o posto (a pari merito la vittoria vale per tutti).
+    * ``podiums``: weekend chiusi nei primi tre (include le vittorie).
+    * ``scoring``: weekend in cui si sono presi punti gara.
+    * ``fantasy`` / ``f1``: totali attuali (dopo l'ultimo weekend) e relative posizioni.
+    * ``best_fantasy`` / ``best_race``: miglior weekend per fantapunti e id della gara.
+    """
+    out: dict[str, dict] = {
+        m: {
+            "wins": 0, "podiums": 0, "scoring": 0, "weekends": 0,
+            "fantasy": 0.0, "f1": 0.0, "fantasy_pos": None, "f1_pos": None,
+            "best_fantasy": 0.0, "best_race": None, "avg_fantasy": 0.0,
+        }
+        for m in members
+    }
+    for race in races:
+        for row in race["rows"]:
+            stat = out[row["key"]]
+            stat["weekends"] += 1
+            stat["wins"] += row["wk_pos"] == 1
+            stat["podiums"] += row["wk_pos"] <= 3
+            stat["scoring"] += row["wk_f1"] > 0
+            if stat["best_race"] is None or row["wk_fantasy"] > stat["best_fantasy"]:
+                stat["best_fantasy"] = row["wk_fantasy"]
+                stat["best_race"] = race["race_id"]
+    if races:
+        for row in races[-1]["rows"]:
+            stat = out[row["key"]]
+            stat["fantasy"] = row["tot_fantasy"]
+            stat["f1"] = row["tot_f1"]
+            stat["fantasy_pos"] = row["tot_fantasy_pos"]
+            stat["f1_pos"] = row["tot_f1_pos"]
+    for stat in out.values():
+        stat["avg_fantasy"] = round(stat["fantasy"] / stat["weekends"], 2) if stat["weekends"] else 0.0
+    return out

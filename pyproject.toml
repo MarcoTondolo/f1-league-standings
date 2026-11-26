@@ -7,6 +7,7 @@ dependencies = ["httpx>=0.27"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+login = ["playwright>=1.44"]
 
 [project.scripts]
 f1-league = "f1_league.cli:main"

@@ -1,4 +1,4 @@
-from f1_league.scoring import build_season, weekend_ranking
+from f1_league.scoring import build_season, season_stats, weekend_ranking
 
 
 def test_f1_points_top_ten_and_zero_after():
@@ -49,3 +49,32 @@ def test_missing_member_counts_zero():
     races = build_season({1: {"a": 10}}, ["a", "b"])
     rows = {r["key"]: r for r in races[0]["rows"]}
     assert rows["b"]["wk_fantasy"] == 0 and rows["b"]["wk_pos"] == 2
+
+
+def test_season_stats_wins_podiums_and_totals():
+    members = ["a", "b", "c", "d"]
+    races = build_season(
+        {
+            1: {"a": 100, "b": 90, "c": 80, "d": 70},   # a vince
+            2: {"b": 120, "a": 95, "c": 90, "d": 10},   # b vince, a secondo, c terzo
+            3: {"b": 110, "c": 105, "d": 100, "a": 50}, # b vince, a ultimo
+        },
+        members,
+    )
+    stats = season_stats(races, members)
+    assert (stats["a"]["wins"], stats["a"]["podiums"]) == (1, 2)
+    assert (stats["b"]["wins"], stats["b"]["podiums"]) == (2, 3)
+    assert (stats["c"]["wins"], stats["c"]["podiums"]) == (0, 3)
+    assert (stats["d"]["wins"], stats["d"]["podiums"]) == (0, 1)
+    assert stats["b"]["fantasy"] == 320 and stats["b"]["fantasy_pos"] == 1
+    assert stats["b"]["f1"] == 18 + 25 + 25 and stats["b"]["f1_pos"] == 1
+    assert stats["a"]["best_fantasy"] == 100 and stats["a"]["best_race"] == 1
+    assert stats["a"]["weekends"] == 3 and stats["a"]["avg_fantasy"] == round(245 / 3, 2)
+
+
+def test_season_stats_tie_counts_as_win_for_both_and_empty_season():
+    stats = season_stats(build_season({1: {"x": 10, "y": 10, "z": 5}}, ["x", "y", "z"]), ["x", "y", "z"])
+    assert stats["x"]["wins"] == stats["y"]["wins"] == 1 and stats["z"]["wins"] == 0
+    assert stats["z"]["podiums"] == 1  # terzo
+    empty = season_stats([], ["x"])
+    assert empty["x"]["wins"] == 0 and empty["x"]["fantasy_pos"] is None

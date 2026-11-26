@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "generated_at": "2026-11-24T14:56:03+00:00",
+ "generated_at": "2026-11-26T14:42:08+00:00",
  "f1_points": [
   25.0,
   18.0,
@@ -3243,6 +3243,164 @@
      "name": "Las Vegas GP"
     }
    ],
+   "stats": {
+    "4a80de80-11a4-11f1-bd50-f12b35c615d5-0-231782919:1": {
+     "wins": 4,
+     "podiums": 9,
+     "scoring": 21,
+     "weekends": 21,
+     "fantasy": 4872.0,
+     "f1": 292.0,
+     "fantasy_pos": 1,
+     "f1_pos": 1,
+     "best_fantasy": 414.0,
+     "best_race": 2,
+     "avg_fantasy": 232.0
+    },
+    "38073a84-1176-11f1-ab76-5d5c886f6f39-0-136797047:1": {
+     "wins": 3,
+     "podiums": 10,
+     "scoring": 19,
+     "weekends": 21,
+     "fantasy": 4781.0,
+     "f1": 257.0,
+     "fantasy_pos": 2,
+     "f1_pos": 3,
+     "best_fantasy": 375.0,
+     "best_race": 9,
+     "avg_fantasy": 227.67
+    },
+    "56a7c1ea-1174-11f1-82b5-b37f1d54e5d0-0-203609872:1": {
+     "wins": 3,
+     "podiums": 7,
+     "scoring": 21,
+     "weekends": 21,
+     "fantasy": 4729.0,
+     "f1": 229.0,
+     "fantasy_pos": 3,
+     "f1_pos": 4,
+     "best_fantasy": 438.0,
+     "best_race": 2,
+     "avg_fantasy": 225.19
+    },
+    "6643c4a4-117f-11f1-be13-5557416cc632-0-211786406:1": {
+     "wins": 6,
+     "podiums": 8,
+     "scoring": 20,
+     "weekends": 21,
+     "fantasy": 4617.0,
+     "f1": 263.0,
+     "fantasy_pos": 4,
+     "f1_pos": 2,
+     "best_fantasy": 394.0,
+     "best_race": 9,
+     "avg_fantasy": 219.86
+    },
+    "61340bae-117a-11f1-813b-35115d49f57d-0-156161074:1": {
+     "wins": 1,
+     "podiums": 4,
+     "scoring": 20,
+     "weekends": 21,
+     "fantasy": 4428.0,
+     "f1": 184.0,
+     "fantasy_pos": 5,
+     "f1_pos": 5,
+     "best_fantasy": 447.0,
+     "best_race": 2,
+     "avg_fantasy": 210.86
+    },
+    "fb8b0a90-1175-11f1-a3fa-87fe5ee26551-0-178269622:1": {
+     "wins": 0,
+     "podiums": 5,
+     "scoring": 19,
+     "weekends": 21,
+     "fantasy": 4405.0,
+     "f1": 179.0,
+     "fantasy_pos": 6,
+     "f1_pos": 6,
+     "best_fantasy": 355.0,
+     "best_race": 2,
+     "avg_fantasy": 209.76
+    },
+    "3fecba9c-1178-11f1-bec4-d5465edddecf-0-34910116:3": {
+     "wins": 1,
+     "podiums": 5,
+     "scoring": 20,
+     "weekends": 21,
+     "fantasy": 4385.0,
+     "f1": 178.0,
+     "fantasy_pos": 7,
+     "f1_pos": 7,
+     "best_fantasy": 353.0,
+     "best_race": 2,
+     "avg_fantasy": 208.81
+    },
+    "77c68d94-1583-11f1-af1a-8b3951234cf3-0-169376748:1": {
+     "wins": 1,
+     "podiums": 7,
+     "scoring": 20,
+     "weekends": 21,
+     "fantasy": 4369.0,
+     "f1": 177.0,
+     "fantasy_pos": 8,
+     "f1_pos": 8,
+     "best_fantasy": 404.0,
+     "best_race": 2,
+     "avg_fantasy": 208.05
+    },
+    "a5f1a9b4-1935-11f1-8584-91067885f997-0-232492641:1": {
+     "wins": 0,
+     "podiums": 4,
+     "scoring": 18,
+     "weekends": 21,
+     "fantasy": 4214.0,
+     "f1": 144.0,
+     "fantasy_pos": 9,
+     "f1_pos": 9,
+     "best_fantasy": 430.0,
+     "best_race": 2,
+     "avg_fantasy": 200.67
+    },
+    "94862ad6-199b-11f1-a02c-19558e7ce9a4-0-232604136:1": {
+     "wins": 1,
+     "podiums": 1,
+     "scoring": 12,
+     "weekends": 21,
+     "fantasy": 3927.0,
+     "f1": 92.0,
+     "fantasy_pos": 10,
+     "f1_pos": 10,
+     "best_fantasy": 424.0,
+     "best_race": 2,
+     "avg_fantasy": 187.0
+    },
+    "b956b656-1175-11f1-a35e-39ea15b0f4ef-0-156161037:1": {
+     "wins": 1,
+     "podiums": 1,
+     "scoring": 10,
+     "weekends": 21,
+     "fantasy": 3298.0,
+     "f1": 67.0,
+     "fantasy_pos": 11,
+     "f1_pos": 12,
+     "best_fantasy": 353.0,
+     "best_race": 2,
+     "avg_fantasy": 157.05
+    },
+    "7a3dba86-1176-11f1-bfd8-89ad6103548b-0-156160983:1": {
+     "wins": 1,
+     "podiums": 2,
+     "scoring": 11,
+     "weekends": 21,
+     "fantasy": 2951.0,
+     "f1": 87.0,
+     "fantasy_pos": 12,
+     "f1_pos": 11,
+     "best_fantasy": 259.0,
+     "best_race": 21,
+     "avg_fantasy": 140.52
+    }
+   },
    "warnings": []
   }
  ]

@@ -73,3 +73,9 @@ def test_dotenv_loads_without_overriding(tmp_path, monkeypatch):
     assert os.environ["F1_USER_GUID"] == "guid-1"
     assert os.environ["F1_ALREADY"] == "vecchio"
     assert load_dotenv(str(tmp_path / "manca")) is False
+
+
+def test_collect_league_includes_stats():
+    data = collect_league(make_api(), 7, spacing=0)
+    assert set(data["stats"]) == {m["key"] for m in data["members"]}
+    assert sum(s["wins"] for s in data["stats"].values()) >= 3

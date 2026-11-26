@@ -55,11 +55,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", default="config.toml")
     parser.add_argument("--out", default="docs", help="cartella del sito (default: docs)")
     parser.add_argument("--env-file", default=".env", help="file con F1_FANTASY_TOKEN e F1_USER_GUID (default: .env)")
+    parser.add_argument("--login", action="store_true", help="apre Chrome, tu accedi, e token/GUID vengono salvati in .env")
     parser.add_argument("--league", type=int, action="append", help="id lega (ripetibile)")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="%(message)s")
 
+    if args.login:
+        from f1_league.login import LoginError, run_login
+
+        try:
+            run_login(args.env_file)
+        except LoginError as exc:
+            print(f"Login non riuscito: {exc}", file=sys.stderr)
+            return 3
     load_dotenv(args.env_file)
     config = load_config(args.config)
     season = int(config.get("season", 2026))

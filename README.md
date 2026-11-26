@@ -32,13 +32,31 @@ F1_USER_GUID=il_tuo_guid
 Poi:
 
 ```powershell
-pip install -e ".[dev]"
-f1-league
-python -m http.server 8000 --directory docs   # poi http://localhost:8000
-pytest
+py -m pip install -e ".[dev]"
+py -m f1_league
 ```
 
+### Login assistito (token e GUID in automatico)
+
+Invece di copiare cookie e GUID a mano:
+
+```powershell
+py -m pip install -e ".[login]"
+py -m f1_league --login
+```
+
+Si apre il tuo Chrome (con un profilo dedicato in `~\.f1-league\chrome-profile`, così resti connesso): accedi a F1 Fantasy e, se serve, apri la pagina delle leghe. Il programma legge dallo stesso browser il cookie `F1_FANTASY_007` e il GUID che il sito usa nelle sue richieste, li salva nel `.env` e continua con la generazione. Non gestisce la password e non aggira nessuna protezione: il login lo fai tu. Se Chrome non viene trovato imposta `F1_CHROME_PATH` con il percorso di `chrome.exe`; chiudi prima le altre finestre di Chrome aperte con quel profilo.
+
+Il login resta manuale anche su GitHub Actions: lì il cookie va aggiornato nel secret `F1_FANTASY_TOKEN` quando scade (circa ogni 5 giorni).
+
 Il file si legge dalla cartella da cui lanci il comando (o indicane un altro con `--env-file`). Le variabili d'ambiente già impostate hanno la precedenza sul file. Quando il cookie scade basta aggiornare il `.env`. In alternativa si possono impostare con `$env:F1_FANTASY_TOKEN = '...'` nella stessa finestra.
+
+## Statistiche
+
+Nella pagina c'e' il pulsante **Statistiche**: tabella ordinabile (vittorie, podi, punti gara, fantapunti).
+Cliccando il nome di un giocatore (anche nella classifica) si apre la scheda con vittorie, podi,
+fantapunti e punti gara attuali con la posizione, il miglior weekend e il dettaglio weekend per weekend.
+Vittoria = primo posto nel weekend, podio = primi tre; in caso di pari merito la posizione e' condivisa.
 
 ## Configurazione (`config.toml`)
 

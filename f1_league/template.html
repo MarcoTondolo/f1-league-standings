@@ -29,6 +29,7 @@
   --gain:#3ddc97; --loss:#f26b6b; --best:#c79bff; --best-bg:#2a1d42;
 }
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 html{background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 var(--font);-webkit-text-size-adjust:100%}
 .wrap{max-width:880px;margin:0 auto;padding:20px 16px 48px}
@@ -69,7 +70,34 @@ tr.best td.main span{background:var(--best-bg);padding:3px 8px;border-radius:5px
 .notes details{margin-top:10px}
 .notes summary{cursor:pointer;color:var(--ink);font-weight:500}
 .notes ul{margin:8px 0 0;padding-left:18px}
-@media (max-width:560px){ .hide-s{display:none} .who,.team{max-width:42vw} td{padding:8px 7px} }
+.who-btn{background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;display:block;max-width:100%}
+.who-btn:hover .who{text-decoration:underline;text-underline-offset:3px}
+.who-btn:focus-visible{outline:2px solid var(--best);outline-offset:3px;border-radius:4px}
+th button{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer}
+th button[aria-pressed="true"]{color:var(--ink);font-weight:600;text-decoration:underline;text-underline-offset:4px}
+td.num{font:600 22px/1 var(--num)}
+td.num.dim{color:var(--mute);font-weight:500}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:0;width:min(520px,calc(100vw - 24px));max-height:calc(100vh - 32px);overflow:auto}
+dialog::backdrop{background:rgba(8,10,14,.55)}
+.pd{padding:20px 18px 18px}
+.pd-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.pd h2{margin:0;font:700 32px/1.05 var(--num)}
+.pd .team{max-width:none;margin-top:2px}
+.pd-close{background:var(--row);border:1px solid var(--line);color:var(--ink);border-radius:6px;font:600 15px var(--font);padding:6px 12px;cursor:pointer}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:16px 0 10px}
+.tile{background:var(--row);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.tile b{display:block;font:700 38px/1 var(--num)}
+.tile span{display:block;color:var(--mute);font-size:13px;margin-top:3px}
+.tile.win b{color:var(--best)}
+.facts{margin:0 0 14px;color:var(--mute);font-size:14px}
+.pd table{margin-top:4px}
+.pd td,.pd th{padding:6px 8px}
+.pd td.l{font-weight:500}
+.tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;font-size:12px;font-weight:600;background:var(--best-bg);color:var(--best)}
+@media (max-width:560px){
+  #table-host td.num{font-size:17px}#table-host td.main{font-size:22px}
+  #table-host th,#table-host td{padding-left:5px;padding-right:5px}
+  #table-host td.l{min-width:0} .hide-s{display:none} .who,.team{max-width:42vw} td{padding:8px 7px} }
 @media (prefers-reduced-motion:no-preference){ tbody tr{transition:none} }
 </style>
 </head>
@@ -84,11 +112,15 @@ tr.best td.main span{background:var(--best-bg);padding:3px 8px;border-radius:5px
   </header>
 
   <div class="controls">
-    <div class="seg" role="group" aria-label="Tipo di classifica">
+    <div class="seg" role="group" aria-label="Pagina">
+      <button type="button" data-page="standings" aria-pressed="true">Classifica</button>
+      <button type="button" data-page="stats" aria-pressed="false">Statistiche</button>
+    </div>
+    <div class="seg" id="seg-mode" role="group" aria-label="Tipo di classifica">
       <button type="button" data-mode="fantasy" aria-pressed="true">Fantapunti</button>
       <button type="button" data-mode="f1" aria-pressed="false">Punti gara</button>
     </div>
-    <div class="seg" role="group" aria-label="Periodo">
+    <div class="seg" id="seg-view" role="group" aria-label="Periodo">
       <button type="button" data-view="weekend" aria-pressed="true">Weekend</button>
       <button type="button" data-view="total" aria-pressed="false">Totale</button>
     </div>
@@ -102,6 +134,10 @@ tr.best td.main span{background:var(--best-bg);padding:3px 8px;border-radius:5px
   <section class="notes" id="notes"></section>
 </div>
 
+<dialog id="player-dialog" aria-labelledby="pd-name">
+  <div class="pd" id="pd-body"></div>
+</dialog>
+
 <script>
 const DATA = /*__DATA__*/null;
 
@@ -109,7 +145,7 @@ const DATA = /*__DATA__*/null;
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => (Math.round(n * 100) / 100).toLocaleString("it-IT", { maximumFractionDigits: 2 });
   const signed = (n) => (n > 0 ? "+" : "") + fmt(n);
-  const state = { league: 0, race: null, mode: "fantasy", view: "weekend" };
+  const state = { league: 0, race: null, mode: "fantasy", view: "weekend", page: "standings", sort: "wins" };
 
   function el(tag, cls, text) {
     const e = document.createElement(tag);
@@ -122,6 +158,8 @@ const DATA = /*__DATA__*/null;
     const p = new URLSearchParams(location.hash.slice(1));
     if (p.get("mode") === "f1" || p.get("mode") === "fantasy") state.mode = p.get("mode");
     if (p.get("view") === "total" || p.get("view") === "weekend") state.view = p.get("view");
+    if (p.get("page") === "stats" || p.get("page") === "standings") state.page = p.get("page");
+    if (["wins", "podiums", "f1", "fantasy"].includes(p.get("sort"))) state.sort = p.get("sort");
     const li = DATA.leagues.findIndex((l) => String(l.league_id) === p.get("league"));
     if (li >= 0) state.league = li;
     if (p.get("race")) state.race = Number(p.get("race"));
@@ -129,6 +167,7 @@ const DATA = /*__DATA__*/null;
   function writeHash() {
     const p = new URLSearchParams({ league: DATA.leagues[state.league].league_id, mode: state.mode, view: state.view });
     if (state.race != null) p.set("race", state.race);
+    if (state.page === "stats") { p.set("page", "stats"); p.set("sort", state.sort); }
     history.replaceState(null, "", "#" + p);
   }
 
@@ -213,8 +252,7 @@ const DATA = /*__DATA__*/null;
       for (const c of cols) {
         const td = el("td", c.cls);
         if (c.who) {
-          td.appendChild(el("span", "who", r.m.name));
-          if (r.m.team) td.appendChild(el("span", "team", r.m.team));
+          td.appendChild(playerButton(r.m));
         } else if (c.move) {
           if (r.prev == null) { td.classList.add("flat"); td.textContent = "–"; }
           else if (r.prev > r.pos) { td.classList.add("up"); td.textContent = "▲ " + (r.prev - r.pos); }
@@ -233,11 +271,160 @@ const DATA = /*__DATA__*/null;
     host.appendChild(table);
   }
 
+  function playerButton(m) {
+    const b = el("button", "who-btn");
+    b.type = "button";
+    b.title = "Statistiche di " + m.name;
+    b.appendChild(el("span", "who", m.name));
+    if (m.team) b.appendChild(el("span", "team", m.team));
+    b.addEventListener("click", () => openPlayer(m.key));
+    return b;
+  }
+
+  const raceName = (id) => { const r = league().races.find((x) => x.id === id); return r ? r.name : "Gara " + id; };
+  const ordinal = (n) => n + "°";
+
+  function openPlayer(key) {
+    const l = league();
+    const m = l.members.find((x) => x.key === key);
+    const s = (l.stats || {})[key];
+    if (!m || !s) return;
+    const body = $("pd-body");
+    body.replaceChildren();
+
+    const head = el("div", "pd-head");
+    const who = el("div");
+    const h = el("h2", "", m.name);
+    h.id = "pd-name";
+    who.appendChild(h);
+    if (m.team) who.appendChild(el("span", "team", m.team));
+    head.appendChild(who);
+    const close = el("button", "pd-close", "Chiudi");
+    close.type = "button";
+    close.addEventListener("click", () => $("player-dialog").close());
+    head.appendChild(close);
+    body.appendChild(head);
+
+    const tiles = el("div", "tiles");
+    const tile = (value, label, cls) => {
+      const t = el("div", "tile" + (cls ? " " + cls : ""));
+      t.appendChild(el("b", "", value));
+      t.appendChild(el("span", "", label));
+      tiles.appendChild(t);
+    };
+    tile(String(s.wins), s.wins === 1 ? "vittoria" : "vittorie", s.wins ? "win" : "");
+    tile(String(s.podiums), s.podiums === 1 ? "podio" : "podi");
+    tile(fmt(s.fantasy), s.fantasy_pos ? `fantapunti · ${ordinal(s.fantasy_pos)} in classifica` : "fantapunti");
+    tile(fmt(s.f1), s.f1_pos ? `punti gara · ${ordinal(s.f1_pos)} in classifica` : "punti gara");
+    body.appendChild(tiles);
+
+    const facts = [];
+    facts.push(`${s.weekends} ${s.weekends === 1 ? "weekend" : "weekend"} disputati`);
+    facts.push(`a punti in ${s.scoring}`);
+    if (s.best_race != null) facts.push(`miglior weekend: ${raceName(s.best_race)} (${fmt(s.best_fantasy)})`);
+    if (s.weekends) facts.push(`media ${fmt(s.avg_fantasy)} fantapunti`);
+    body.appendChild(el("p", "facts", facts.join(" · ")));
+
+    if (l.races.length) {
+      const table = el("table");
+      const hr = el("tr");
+      [["Weekend", "l"], ["Pos.", ""], ["Fantapunti", ""], ["Punti gara", ""]].forEach(([t, c]) => {
+        const th = el("th", c, t); th.scope = "col"; hr.appendChild(th);
+      });
+      table.appendChild(el("thead")).appendChild(hr);
+      const tb = el("tbody");
+      for (const race of l.races) {
+        const row = race.rows.find((x) => x.key === key);
+        if (!row) continue;
+        const tr = el("tr");
+        const name = el("td", "l", race.name);
+        if (row.wk_pos === 1) name.appendChild(el("span", "tag", "Vittoria"));
+        else if (row.wk_pos <= 3) name.appendChild(el("span", "tag", "Podio"));
+        tr.appendChild(name);
+        tr.appendChild(el("td", "num", ordinal(row.wk_pos)));
+        tr.appendChild(el("td", "num", fmt(row.wk_fantasy)));
+        tr.appendChild(el("td", "num" + (row.wk_f1 ? "" : " dim"), fmt(row.wk_f1)));
+        tb.appendChild(tr);
+      }
+      table.appendChild(tb);
+      body.appendChild(table);
+    }
+    const dlg = $("player-dialog");
+    if (!dlg.open) dlg.showModal();
+  }
+
+  function renderStats() {
+    const host = $("table-host");
+    host.replaceChildren();
+    const l = league();
+    const count = l.races.length;
+    $("table-title").textContent = "Statistiche";
+    $("table-note").textContent = count
+      ? `Dopo ${l.races[count - 1].name} · ${count} ${count === 1 ? "weekend" : "weekend"}`
+      : "";
+    if (!count) {
+      host.appendChild(el("div", "empty", "Appena un weekend avrà punteggi, le statistiche compariranno qui."));
+      return;
+    }
+    const stats = l.stats || {};
+    const order = { wins: ["wins", "podiums", "f1", "fantasy"], podiums: ["podiums", "wins", "f1", "fantasy"],
+                    f1: ["f1", "wins", "podiums", "fantasy"], fantasy: ["fantasy", "wins", "podiums", "f1"] }[state.sort];
+    const rows = l.members.map((m) => ({ m, s: stats[m.key] })).filter((r) => r.s);
+    rows.sort((a, b) => {
+      for (const k of order) if (b.s[k] !== a.s[k]) return b.s[k] - a.s[k];
+      return a.m.name.localeCompare(b.m.name, "it");
+    });
+    let pos = 0, prev = null;
+    rows.forEach((r, i) => { if (r.s[state.sort] !== prev) { pos = i + 1; prev = r.s[state.sort]; } r.pos = pos; });
+
+    const cols = [
+      { label: "", cls: "pos" },
+      { label: "Giocatore", cls: "l", who: true },
+      { label: "Vittorie", cls: "main", sort: "wins", cell: (r) => String(r.s.wins) },
+      { label: "Podi", cls: "num", sort: "podiums", cell: (r) => String(r.s.podiums) },
+      { label: "Punti gara", cls: "num", sort: "f1", cell: (r) => fmt(r.s.f1) },
+      { label: "Fantapunti", cls: "num dim", sort: "fantasy", cell: (r) => fmt(r.s.fantasy) },
+    ];
+    const table = el("table");
+    const hr = el("tr");
+    for (const c of cols) {
+      const th = el("th", c.who ? "l" : "");
+      th.scope = "col";
+      if (c.sort) {
+        const b = el("button", "", c.label);
+        b.type = "button";
+        b.setAttribute("aria-pressed", String(state.sort === c.sort));
+        b.title = "Ordina per " + c.label.toLowerCase();
+        b.addEventListener("click", () => { state.sort = c.sort; render(); });
+        th.appendChild(b);
+      } else th.textContent = c.label;
+      hr.appendChild(th);
+    }
+    table.appendChild(el("thead")).appendChild(hr);
+    const tb = el("tbody");
+    for (const r of rows) {
+      const tr = el("tr");
+      for (const c of cols) {
+        const td = el("td", c.cls);
+        if (c.who) td.appendChild(playerButton(r.m));
+        else if (c.cell) {
+          if (c.cls === "main") td.appendChild(el("span", "", c.cell(r)));
+          else td.textContent = c.cell(r);
+        } else td.textContent = String(r.pos);
+        tr.appendChild(td);
+      }
+      tb.appendChild(tr);
+    }
+    table.appendChild(tb);
+    host.appendChild(table);
+  }
+
   function renderNotes() {
     const n = $("notes");
     n.replaceChildren();
     const table = DATA.f1_points.map(fmt).join(" · ");
     n.appendChild(el("p", "", `Punti gara: nel weekend i primi della classifica fantasy prendono ${table}; gli altri 0. Il totale è la somma dei weekend.`));
+    n.appendChild(el("p", "", "Vittoria = primo posto nel weekend, podio = primi tre (anche a pari merito). Clicca un giocatore per vedere tutti i suoi weekend."));
     n.appendChild(el("p", "", "Pari merito nel weekend: stessa posizione e stessi punti. Nel totale dei punti gara decidono prima le vittorie, poi i secondi posti e così via, infine i fantapunti."));
     const w = league().warnings || [];
     if (w.length) {
@@ -261,9 +448,15 @@ const DATA = /*__DATA__*/null;
     document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === state.view)));
     const race = currentRace();
     state.race = race ? race.id : null;
-    renderRaces(); renderTable(); renderNotes(); writeHash();
+    document.querySelectorAll("[data-page]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.page === state.page)));
+    const stats = state.page === "stats";
+    $("seg-mode").hidden = stats; $("seg-view").hidden = stats; $("races").hidden = stats;
+    if (stats) renderStats(); else { renderRaces(); renderTable(); }
+    renderNotes(); writeHash();
   }
 
+  document.querySelectorAll("[data-page]").forEach((b) => b.addEventListener("click", () => { state.page = b.dataset.page; render(); }));
+  $("player-dialog").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
   document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => { state.mode = b.dataset.mode; render(); }));
   document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => { state.view = b.dataset.view; render(); }));
 
