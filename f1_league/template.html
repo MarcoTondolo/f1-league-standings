@@ -12,7 +12,7 @@
 :root{
   --bg:#eef0f3; --panel:#ffffff; --row:#f6f7f9; --line:#d9dde3;
   --ink:#12161c; --mute:#5d6775; --accent:#12161c; --on-accent:#ffffff;
-  --gain:#0f8a5f; --loss:#c93a3a; --best:#7a35d4; --best-bg:#efe4fc;
+  --gold:#a06a00; --gain:#0f8a5f; --loss:#c93a3a; --best:#7a35d4; --best-bg:#efe4fc;
   --font:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
   --num:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
 }
@@ -20,13 +20,13 @@
   :root:not([data-theme="light"]){
     --bg:#0c0f14; --panel:#141922; --row:#19202b; --line:#27303d;
     --ink:#eef1f5; --mute:#8d97a6; --accent:#eef1f5; --on-accent:#0c0f14;
-    --gain:#3ddc97; --loss:#f26b6b; --best:#c79bff; --best-bg:#2a1d42;
+    --gold:#ffc83d; --gain:#3ddc97; --loss:#f26b6b; --best:#c79bff; --best-bg:#2a1d42;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0c0f14; --panel:#141922; --row:#19202b; --line:#27303d;
   --ink:#eef1f5; --mute:#8d97a6; --accent:#eef1f5; --on-accent:#0c0f14;
-  --gain:#3ddc97; --loss:#f26b6b; --best:#c79bff; --best-bg:#2a1d42;
+  --gold:#ffc83d; --gain:#3ddc97; --loss:#f26b6b; --best:#c79bff; --best-bg:#2a1d42;
 }
 *{box-sizing:border-box}
 [hidden]{display:none !important}
@@ -71,6 +71,8 @@ tr.best td.main span{background:var(--best-bg);padding:3px 8px;border-radius:5px
 .notes summary{cursor:pointer;color:var(--ink);font-weight:500}
 .notes ul{margin:8px 0 0;padding-left:18px}
 .who-btn{background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;display:block;max-width:100%}
+.pd h2.champ{color:var(--gold)}
+.who.champ{color:var(--gold);font-weight:700}
 .who-btn:hover .who{text-decoration:underline;text-underline-offset:3px}
 .who-btn:focus-visible{outline:2px solid var(--best);outline-offset:3px;border-radius:4px}
 th button{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer}
@@ -93,6 +95,7 @@ dialog::backdrop{background:rgba(8,10,14,.55)}
 .pd table{margin-top:4px}
 .pd td,.pd th{padding:6px 8px}
 .pd td.l{font-weight:500}
+.tag.gold{background:transparent;border:1px solid var(--gold);color:var(--gold);margin:6px 0 0}
 .tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;font-size:12px;font-weight:600;background:var(--best-bg);color:var(--best)}
 @media (max-width:560px){
   #table-host td.num{font-size:17px}#table-host td.main{font-size:22px}
@@ -275,7 +278,9 @@ const DATA = /*__DATA__*/null;
     const b = el("button", "who-btn");
     b.type = "button";
     b.title = "Statistiche di " + m.name;
-    b.appendChild(el("span", "who", m.name));
+    const champ = league().champion === m.key;
+    b.appendChild(el("span", "who" + (champ ? " champ" : ""), m.name));
+    if (champ) b.title = "Campione matematico nei punti gara · statistiche di " + m.name;
     if (m.team) b.appendChild(el("span", "team", m.team));
     b.addEventListener("click", () => openPlayer(m.key));
     return b;
@@ -294,10 +299,11 @@ const DATA = /*__DATA__*/null;
 
     const head = el("div", "pd-head");
     const who = el("div");
-    const h = el("h2", "", m.name);
+    const h = el("h2", league().champion === key ? "champ" : "", m.name);
     h.id = "pd-name";
     who.appendChild(h);
     if (m.team) who.appendChild(el("span", "team", m.team));
+    if (l.champion === key) who.appendChild(el("span", "tag gold", "Campione matematico (punti gara)"));
     head.appendChild(who);
     const close = el("button", "pd-close", "Chiudi");
     close.type = "button";
@@ -424,6 +430,7 @@ const DATA = /*__DATA__*/null;
     n.replaceChildren();
     const table = DATA.f1_points.map(fmt).join(" · ");
     n.appendChild(el("p", "", `Punti gara: nel weekend i primi della classifica fantasy prendono ${table}; gli altri 0. Il totale è la somma dei weekend.`));
+    if (league().champion) n.appendChild(el("p", "", "Nome in oro: campione matematico dei punti gara, nessuno puo' piu' raggiungerlo nemmeno vincendo tutti i weekend rimasti."));
     n.appendChild(el("p", "", "Vittoria = primo posto nel weekend, podio = primi tre (anche a pari merito). Clicca un giocatore per vedere tutti i suoi weekend."));
     n.appendChild(el("p", "", "Pari merito nel weekend: stessa posizione e stessi punti. Nel totale dei punti gara decidono prima le vittorie, poi i secondi posti e così via, infine i fantapunti."));
     const w = league().warnings || [];

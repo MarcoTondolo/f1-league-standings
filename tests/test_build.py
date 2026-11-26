@@ -79,3 +79,13 @@ def test_collect_league_includes_stats():
     data = collect_league(make_api(), 7, spacing=0)
     assert set(data["stats"]) == {m["key"] for m in data["members"]}
     assert sum(s["wins"] for s in data["stats"].values()) >= 3
+
+
+def test_payload_marks_champion_only_when_certain():
+    def payload(total):
+        data = collect_league(make_api(), 7, spacing=0)
+        return build_payload([data], 2026, {}, [25, 18, 15, 12, 10, 8, 6, 4, 2, 1], total)["leagues"][0]
+
+    assert payload(None)["champion"] is None   # calendario sconosciuto
+    assert payload(10)["champion"] is None     # 7 weekend ancora da correre
+    assert payload(3)["champion"] is not None  # stagione finita: vince il primo

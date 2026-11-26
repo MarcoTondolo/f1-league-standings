@@ -12,7 +12,7 @@ from typing import Any, Mapping, Sequence
 
 from f1_league.api import FantasyApi, is_own_account
 from f1_league.client import AuthExpired, FantasyError, NotShared
-from f1_league.scoring import F1_POINTS, build_season, season_stats
+from f1_league.scoring import F1_POINTS, build_season, mathematical_champion, season_stats
 
 log = logging.getLogger(__name__)
 
@@ -119,13 +119,25 @@ def fetch_race_names(season: int, *, attempts: int = 3, sleep=time.sleep) -> dic
 
 
 def build_payload(
-    leagues: Sequence[dict], season: int, race_names: Mapping[int, str], table: Sequence[float]
+    leagues: Sequence[dict],
+    season: int,
+    race_names: Mapping[int, str],
+    table: Sequence[float],
+    total_races: int | None = None,
 ) -> dict[str, Any]:
+    total = total_races or max(race_names, default=0)
     for league in leagues:
         for race in league["races"]:
             race["name"] = race_names.get(race["id"], f"Gara {race['id']}")
+        races = league["races"]
+        # senza calendario noto non si puo' dire quanti weekend mancano: nessun campione.
+        champion = None
+        if total and races:
+            champion = mathematical_champion(races[-1]["rows"], total - len(races), table)
+        league["champion"] = champion
     return {
         "season": season,
+        "total_races": total,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "f1_points": list(table),
         "leagues": list(leagues),

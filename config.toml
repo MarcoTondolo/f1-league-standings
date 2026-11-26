@@ -10,6 +10,10 @@ max_members = 40
 # Punti gara stile Formula 1: 1o, 2o, 3o ... Chi e' oltre l'ultima posizione prende 0.
 f1_points = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
 
+# Numero di weekend della stagione. Serve a stabilire il campione matematico;
+# se omesso si usa il calendario (Jolpica). Se non e' noto, nessun campione viene indicato.
+# total_races = 24
+
 # Nomi dei weekend, se vuoi sostituire quelli presi dal calendario.
 # Chiave = id gara di F1 Fantasy.
 # [race_names]

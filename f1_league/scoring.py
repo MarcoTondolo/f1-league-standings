@@ -153,3 +153,20 @@ def season_stats(races: Sequence[Mapping], members: Sequence[str]) -> dict[str, 
     for stat in out.values():
         stat["avg_fantasy"] = round(stat["fantasy"] / stat["weekends"], 2) if stat["weekends"] else 0.0
     return out
+
+
+def mathematical_champion(rows, remaining, table):
+    """Chiave del campione matematico nei punti gara, o None.
+
+    rows: righe dell'ultimo weekend (con tot_f1). Il leader e' campione solo se il suo totale
+    supera, con tutti i weekend rimasti vinti dal secondo, quello del secondo: confronto stretto,
+    cosi' un eventuale pari merito (decisivo solo per i tie-break) non viene dato per certo.
+    """
+    if remaining < 0 or not rows:
+        return None
+    ranked = sorted(rows, key=lambda r: r["tot_f1"], reverse=True)
+    best = ranked[0]
+    if len(ranked) == 1:
+        return best["key"] if remaining == 0 else None
+    top = max(table) if table else 0
+    return best["key"] if best["tot_f1"] > ranked[1]["tot_f1"] + remaining * top else None

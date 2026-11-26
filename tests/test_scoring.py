@@ -78,3 +78,16 @@ def test_season_stats_tie_counts_as_win_for_both_and_empty_season():
     assert stats["z"]["podiums"] == 1  # terzo
     empty = season_stats([], ["x"])
     assert empty["x"]["wins"] == 0 and empty["x"]["fantasy_pos"] is None
+
+
+def test_mathematical_champion():
+    from f1_league.scoring import mathematical_champion
+
+    table = [25, 18, 15]
+    rows = [{"key": "a", "tot_f1": 100}, {"key": "b", "tot_f1": 60}]
+    assert mathematical_champion(rows, 1, table) == "a"      # 100 > 60 + 25
+    assert mathematical_champion(rows, 2, table) is None     # 100 < 60 + 50
+    assert mathematical_champion([{"key": "a", "tot_f1": 85}, {"key": "b", "tot_f1": 60}], 1, table) is None  # pari: non certo
+    assert mathematical_champion(rows, 0, table) == "a"
+    assert mathematical_champion(rows, -1, table) is None
+    assert mathematical_champion([], 1, table) is None

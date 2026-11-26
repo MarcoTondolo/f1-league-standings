@@ -104,7 +104,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     race_names = {**fetch_race_names(season), **names}
-    payload = build_payload(leagues, season, race_names, table)
+    payload = build_payload(leagues, season, race_names, table, int(config.get("total_races", 0)) or None)
     for path in write_site(payload, Path(args.out)):
         logging.info("scritto %s", path)
     return 0
